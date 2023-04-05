@@ -8,8 +8,9 @@ export default function SearchBar() {
   const [location, setLocation] = useState('')
 
   const handleOnClick = () => {
-    if (location === 'banana') return
-    router.push(`/search?location=${location}`)
+    if (location === '') return
+    router.push(`/search?city=${location}`)
+    setLocation('')
   }
 
   return (
@@ -20,6 +21,12 @@ export default function SearchBar() {
         placeholder='State, city or town'
         value={location}
         onChange={(e) => setLocation(e.target.value)}
+        // on keyboard enter
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            handleOnClick()
+          }
+        }}
       />
       <button
         className='rounded bg-red-600 px-9 py-2 text-white'
