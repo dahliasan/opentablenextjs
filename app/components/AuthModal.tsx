@@ -1,8 +1,11 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import Box from '@mui/material/Box'
 import Modal from '@mui/material/Modal'
 import AuthModalInputs from './AuthModalInputs'
+import useAuth from '@/hooks/useAuth'
+import { AuthenticationContext } from '@/context/AuthContext'
+import { Alert, CircularProgress } from '@mui/material'
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -17,9 +20,13 @@ const style = {
 }
 
 export default function AuthModal({ isSignIn }: { isSignIn: boolean }) {
+  const { data, error, loading } = useContext(AuthenticationContext)
   const [open, setOpen] = useState(false)
+  const [disabled, setDisabled] = useState(true)
+
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
+  const { signin, signup } = useAuth()
 
   const renderContent = (signInContent: string, signUpContent: string) => {
     return isSignIn ? signInContent : signUpContent
@@ -38,6 +45,33 @@ export default function AuthModal({ isSignIn }: { isSignIn: boolean }) {
     city: '',
     password: '',
   })
+
+  // validate that all inputs are filled
+  useEffect(() => {
+    if (isSignIn) {
+      if (inputs.email && inputs.password) setDisabled(false)
+    } else {
+      if (
+        inputs.firstName &&
+        inputs.lastName &&
+        inputs.email &&
+        inputs.phone &&
+        inputs.city &&
+        inputs.password
+      ) {
+        setDisabled(false)
+      }
+    }
+  }, [inputs])
+
+  const handleSubmit = () => {
+    if (isSignIn) {
+      signin({
+        email: inputs.email,
+        password: inputs.password,
+      })
+    }
+  }
 
   return (
     <div>
@@ -74,9 +108,24 @@ export default function AuthModal({ isSignIn }: { isSignIn: boolean }) {
                 handleChangeInput={handleChangeInput}
                 isSignIn={isSignIn}
               />
-              <button className='uppercase bg-red-600 w-full text-white p-3 rounded text-sm mb-5 disabled:bg-gray-400'>
-                {renderContent('Sign in', 'Create account')}
+
+              <button
+                disabled={disabled}
+                onClick={handleSubmit}
+                className='uppercase bg-red-600 w-full text-white p-3 rounded text-sm mb-5 disabled:bg-gray-400 flex gap-8 justify-center align-middle'
+              >
+                {}
+                {loading ? (
+                  <CircularProgress
+                    color='inherit'
+                    className='text-white'
+                    size={20}
+                  />
+                ) : (
+                  renderContent('Sign in', 'Create account')
+                )}
               </button>
+              {error && <Alert severity='error'>{error}</Alert>}
             </div>
           </div>
         </Box>

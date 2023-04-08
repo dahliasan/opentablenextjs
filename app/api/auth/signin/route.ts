@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import validator from 'validator'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
@@ -6,7 +6,7 @@ import * as jose from 'jose'
 
 const prisma = new PrismaClient()
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const errors: string[] = []
   const data = await request.json()
   const validatorSchema = [
@@ -35,13 +35,13 @@ export async function POST(request: Request) {
     )
   }
 
-  const userWithEmail = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: {
       email: data.email,
     },
   })
 
-  if (!userWithEmail) {
+  if (!user) {
     return NextResponse.json(
       {
         message: 'User with this email does not exist',
@@ -50,10 +50,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const passwordMatch = await bcrypt.compare(
-    data.password,
-    userWithEmail.password
-  )
+  const passwordMatch = await bcrypt.compare(data.password, user.password)
 
   if (!passwordMatch) {
     return NextResponse.json(
@@ -67,15 +64,28 @@ export async function POST(request: Request) {
   const algo = 'HS256'
   const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
-  const token = await new jose.SignJWT({ email: userWithEmail.email })
+  const token = await new jose.SignJWT({ email: user.email })
     .setProtectedHeader({ alg: algo })
     .setExpirationTime('1h')
     .sign(secret)
 
-  return NextResponse.json(
+  const { password, ...userWithoutPassword } = user
+
+  // Set json response first
+  const response = NextResponse.json(
     {
-      token,
+      ...userWithoutPassword,
     },
     { status: 200 }
   )
+
+  // Then set a cookie
+  response.cookies.set({
+    name: 'jwt',
+    value: token,
+    httpOnly: true,
+    maxAge: 60 * 60,
+  })
+
+  return response
 }
