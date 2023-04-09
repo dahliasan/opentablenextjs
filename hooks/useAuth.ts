@@ -22,8 +22,6 @@ const useAuth = () => {
         password,
       })
 
-      console.log(response)
-
       setAuthState({ loading: false, error: null, data: response.data })
     } catch (error: any) {
       setAuthState({
@@ -34,8 +32,45 @@ const useAuth = () => {
     }
   }
 
-  const signup = () => {
-    // Sign up logic
+  const signup = async (
+    {
+      email,
+      password,
+      firstName,
+      lastName,
+      city,
+      phone,
+    }: {
+      email: string
+      password: string
+      firstName: string
+      lastName: string
+      city: string
+      phone: string
+    },
+    handleClose: () => void
+  ) => {
+    setAuthState({ loading: true, error: null, data: null })
+
+    try {
+      const response = await axios.post('/api/auth/signup', {
+        email,
+        password,
+        firstName,
+        lastName,
+        city,
+        phone,
+      })
+
+      setAuthState({ loading: false, error: null, data: response.data })
+      handleClose()
+    } catch (error: any) {
+      setAuthState({
+        loading: false,
+        error: error.response.data.message,
+        data: null,
+      })
+    }
   }
 
   return {

@@ -83,7 +83,6 @@ export async function POST(request: NextRequest) {
   response.cookies.set({
     name: 'jwt',
     value: token,
-    httpOnly: true,
     maxAge: 60 * 60,
   })
 

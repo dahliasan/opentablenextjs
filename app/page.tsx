@@ -29,6 +29,10 @@ export const fetchRestaurants = async (): Promise<RestaurantCardType[]> => {
       reviews: true,
     },
   })
+
+  // Disconnect from the database
+  await prisma.$disconnect()
+
   return restaurants
 }
 

@@ -86,6 +86,8 @@ export async function POST(request: Request) {
     },
   })
 
+  const { password, ...userWithoutPassword } = user
+
   const algo = 'HS256'
   const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
@@ -94,10 +96,16 @@ export async function POST(request: Request) {
     .setExpirationTime('1h')
     .sign(secret)
 
-  return NextResponse.json(
+  const response = NextResponse.json(
     {
-      token,
+      ...user,
     },
     { status: 200 }
   )
+
+  response.cookies.set('jwt', token, {
+    maxAge: 60 * 6 * 24,
+  })
+
+  return response
 }

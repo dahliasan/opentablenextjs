@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import jwt from 'jsonwebtoken'
+import { objectKeysSnakeToCamelCase } from '@/app/utils/api'
 
 const prisma = new PrismaClient()
 
@@ -35,6 +36,11 @@ export async function GET(request: NextRequest) {
     },
   })
 
+  // Disconnect from the database
+  await prisma.$disconnect()
+
+  const userCamelCase = objectKeysSnakeToCamelCase(user)
+
   // Return user
-  return NextResponse.json(user, { status: 200 })
+  return NextResponse.json(userCamelCase, { status: 200 })
 }
